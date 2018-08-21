@@ -4,7 +4,11 @@ from telegram.ext import Updater, CommandHandler
 import requests
 from bs4 import BeautifulSoup
 import config
+import os
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
