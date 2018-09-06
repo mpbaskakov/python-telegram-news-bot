@@ -7,7 +7,8 @@ import config
 import os
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.INFO,
+                    filename='log.txt')
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ def post_forecast(bot, update, job):
 
 
 def post_forecast_now(bot, update):
-    #TODO: make adaptive
+    # TODO: make adaptive
     fc = get_forecast(get_html(config.forecast_url))
     common_text = 'Пробки: *{}*.\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'], fc['sunrise'], fc['sunset'])
     t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
