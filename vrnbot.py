@@ -6,10 +6,6 @@ from bs4 import BeautifulSoup
 import config
 import os
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -65,7 +61,7 @@ def get_downtown_digest(html):
         if check_posted(item.find('title').text):
             dd_list = dd_list[:dd_list.index(item)]
             break
-    if not dd_list:
+    if len(dd_list) <= 1:
         return None
     count = 1
     for item in dd_list[::-1]:
@@ -111,6 +107,9 @@ def post_forecast_now(bot, update):
 
 
 def main():
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
     updater = Updater(config.token,
@@ -130,8 +129,8 @@ def main():
     # log all errors
     dp.add_error_handler(error)
     job_queue = updater.job_queue
-    job_morning = job_queue.run_daily(post_forecast, time=datetime.time(hour=7), name='forecast', context='morning')
-    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=17), name='forecast', context='evening')
+    job_morning = job_queue.run_daily(post_forecast, time=datetime.time(hour=7), name='mforecast', context='morning')
+    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=17), name='eforecast', context='evening')
     job_dgst = job_queue.run_repeating(post_downtown_digest, 14400, first=0, name='digest')
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
