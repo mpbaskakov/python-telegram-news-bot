@@ -54,7 +54,6 @@ def write_posted(text):
 
 
 def get_downtown_digest(html):
-    # TODO: not less than 3 news
     soup = BeautifulSoup(html, 'lxml')
     dd_list = soup.find_all('item')
     post_text = '*Дайджест {}:*\n'.format(config.digest_name)
@@ -131,7 +130,7 @@ def main():
     dp.add_error_handler(error)
     job_queue = updater.job_queue
     job_morning = job_queue.run_repeating(post_forecast, 86400, name='mforecast', context='morning')
-    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=17), name='eforecast', context='evening')
+    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=17))
     job_dgst = job_queue.run_repeating(post_downtown_digest, 14400, first=0, name='digest')
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
