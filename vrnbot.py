@@ -125,12 +125,12 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("forecast", post_forecast_now))
+    dp.add_handler(CommandHandler("forecast", post_forecast, context='morning'))
 
     # log all errors
     dp.add_error_handler(error)
     job_queue = updater.job_queue
-    job_morning = job_queue.run_daily(post_forecast, time=datetime.time(hour=7), name='mforecast', context='morning')
+    job_morning = job_queue.run_repeating(post_forecast, 86400, name='mforecast', context='morning')
     job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=17), name='eforecast', context='evening')
     job_dgst = job_queue.run_repeating(post_downtown_digest, 14400, first=0, name='digest')
     updater.start_polling()
