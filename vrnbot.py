@@ -125,7 +125,7 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("forecast", post_forecast, context='morning'))
+    dp.add_handler(CommandHandler("forecast", post_forecast))
 
     # log all errors
     dp.add_error_handler(error)
