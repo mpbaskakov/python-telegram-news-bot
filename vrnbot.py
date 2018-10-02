@@ -84,7 +84,7 @@ def post_yandex_digest(bot, update):
     pass
 
 
-def post_forecast(bot, update, job):
+def post_forecast(bot, job):
     fc = get_forecast(get_html(config.forecast_url))
     common_text = 'Пробки: *{}*.\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'], fc['sunrise'], fc['sunset'])
     t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
@@ -129,8 +129,8 @@ def main():
     # log all errors
     dp.add_error_handler(error)
     job_queue = updater.job_queue
-    job_morning = job_queue.run_repeating(post_forecast, 86400, name='mforecast', context='morning')
-    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=17))
+    job_morning = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.morning_post), context='morning')
+    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.evening_post))
     job_dgst = job_queue.run_repeating(post_downtown_digest, 14400, first=0, name='digest')
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,

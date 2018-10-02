@@ -8,3 +8,5 @@ digest_name = os.environ['DIGEST_NAME']
 proxy_url = os.environ['PROXY_URL']
 proxy_login = os.environ['PROXY_LOGIN']
 proxy_password = os.environ['PROXY_PASSWORD']
+morning_post = int(os.environ.get('MORNING_POST'))
+evening_post = int(os.environ.get('EVENING_POST'))
