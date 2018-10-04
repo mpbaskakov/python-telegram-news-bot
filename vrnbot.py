@@ -28,9 +28,11 @@ def get_html(url):
 def get_forecast(html):
     soup = BeautifulSoup(html, 'lxml')
     fc = dict()
-    for tag in [['city', 'title'], ['traffic', 'hint', True], ['sunrise', 'sun_rise'], ['sunset', 'sunset']]:
+    for tag in [['city', 'title'], ['traffic', 'hint', 'level'], ['sunrise', 'sun_rise'], ['sunset', 'sunset']]:
         if len(tag) == 3:
-            fc[tag[0]] = soup.find(tag[1]).text.lower()
+            fc[tag[0]] = []
+            fc[tag[0]].append(soup.find(tag[1]).text.lower())
+            fc[tag[0]].append(int(soup.find(tag[2]).text))
         else:
             fc[tag[0]] = soup.find(tag[1]).text
     for time in [['morning_temp', 'утро'], ['day_temp', 'день'],  ['evening_temp', 'вечер'], ['night_temp', 'ночь']]:
@@ -44,7 +46,15 @@ def get_forecast(html):
 
 def post_forecast(bot, job):
     fc = get_forecast(get_html(config.forecast_url))
-    common_text = 'Пробки: *{}*.\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'], fc['sunrise'], fc['sunset'])
+    if [2, 3, 4].count(fc['traffic'][1]):
+        level = 'балла'
+    elif fc['traffic'][1] == 1:
+        level = 'балл'
+    else:
+        level = 'баллов'
+    common_text = 'Пробки: *{} {}* ({})\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'][1], level,
+                                                                                  fc['traffic'][0], fc['sunrise'],
+                                                                                  fc['sunset'])
     t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
     t_evening = '\nt° вечером: *{}*\nt° ночью: *{}*'.format(fc['evening_temp'], fc['night_temp'])
     if job.context == 'morning':
