@@ -121,9 +121,9 @@ def main():
     job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.evening_post))
     # News jobs: crawler and poster
     job_dgst_crawler = job_queue.run_repeating(spider, interval=1800, first=0)
-    job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.))
-    job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=12))
-    job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=17))
+    job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.morning_news))
+    job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=config.noon_news))
+    job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=config.evening_news))
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
