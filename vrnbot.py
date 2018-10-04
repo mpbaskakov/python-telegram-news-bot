@@ -5,6 +5,8 @@ import requests
 from bs4 import BeautifulSoup
 import config
 import os
+from db_connect import write_to_base, check_item_exist, get_news, make_posted
+
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
@@ -40,50 +42,6 @@ def get_forecast(html):
     return fc
 
 
-def check_posted(text):
-    with open('last_posted.txt', 'r') as f:
-        if text == f.read():
-            return True
-        else:
-            return False
-
-
-def write_posted(text):
-    with open('last_posted.txt', 'w') as f:
-        f.write(text)
-
-
-def get_downtown_digest(html):
-    soup = BeautifulSoup(html, 'lxml')
-    dd_list = soup.find_all('item')
-    post_text = '*Дайджест {}:*\n'.format(config.digest_name)
-    for item in dd_list:
-        if check_posted(item.find('title').text):
-            dd_list = dd_list[:dd_list.index(item)]
-            break
-    if len(dd_list) <= 1:
-        return None
-    count = 1
-    for item in dd_list[::-1]:
-        title = item.find('title').text
-        link = item.find('guid').text
-        post_text += ('{}) [{}]({})\n'.format(count, title, link))
-        count += 1
-        write_posted(title)
-    return post_text
-
-
-def post_downtown_digest(bot, update):
-    dd = get_downtown_digest(get_html(config.digest_url))
-    if not dd:
-        return
-    bot.send_message(config.post_channel, dd, parse_mode='Markdown')
-
-
-def post_yandex_digest(bot, update):
-    pass
-
-
 def post_forecast(bot, job):
     fc = get_forecast(get_html(config.forecast_url))
     common_text = 'Пробки: *{}*.\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'], fc['sunrise'], fc['sunset'])
@@ -96,14 +54,44 @@ def post_forecast(bot, job):
     bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
 
 
-def post_forecast_now(bot, update):
-    # TODO: make adaptive
-    fc = get_forecast(get_html(config.forecast_url))
-    common_text = 'Пробки: *{}*.\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'], fc['sunrise'], fc['sunset'])
-    t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
-    t_evening = '\nt° вечером: *{}*\nt° ночью: *{}*'.format(fc['evening_temp'], fc['night_temp'])
-    post_text = 'Доброе утро, {}!\n\n'.format(fc['city']) + common_text + t_morning + t_evening
+def post_news(bot, update):
+    post_text = str()
+    news = get_news()
+    if news:
+        post_text = '*Дайджест {}:*\n'.format(config.digest_name)
+        counter = 1
+        for n in news:
+            post_text += '{}) '.format(counter) + n[0] + '\n'
+            counter += 1
+            make_posted(n[0])
+    post_text += '\n{}\n'.format(config.ya_name)
+    counter = 1
+    for news in get_yandex_news(config.ya_link):
+        post_text += '{}) '.format(counter) + news + '\n'
+        counter += 1
     bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
+
+
+def get_yandex_news(url):
+    soup = BeautifulSoup(get_html(url), 'lxml')
+    news = soup.find_all('h2', class_='story__title')[0:5]
+    text = []
+    for n in news:
+        title = n.find('a').text
+        link = config.ya_link[0:23] + n.find('a')['href']
+        text.append(('[{}]({})'.format(title, link)))
+    return text
+
+
+def spider(bot, update):
+    soup = BeautifulSoup(get_html(config.digest_url), 'lxml')
+    dd_list = soup.find_all('item')
+    for item in dd_list[::-1]:
+        title = item.find('title').text
+        link = item.find('guid').text
+        item_text = ('[{}]({})'.format(title, link))
+        if not check_item_exist(item_text):
+            write_to_base(item_text)
 
 
 def main():
@@ -124,14 +112,18 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("forecast", post_forecast))
 
     # log all errors
     dp.add_error_handler(error)
     job_queue = updater.job_queue
+    # Forecast jobs
     job_morning = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.morning_post), context='morning')
     job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.evening_post))
-    job_dgst = job_queue.run_repeating(post_downtown_digest, 14400, first=0, name='digest')
+    # News jobs: crawler and poster
+    job_dgst_crawler = job_queue.run_repeating(spider, interval=1800, first=0)
+    job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.))
+    job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=12))
+    job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=17))
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
