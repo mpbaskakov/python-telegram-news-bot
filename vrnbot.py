@@ -5,9 +5,9 @@ import requests
 from bs4 import BeautifulSoup
 import config
 import os
-from db_connect import write_to_base, check_item_exist, get_news, make_posted
+from db_connect import write_to_base, check_item_exist, get_news, make_posted, db_trash
 
-
+# Logging functions
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
                     filename='log.txt')
@@ -23,6 +23,7 @@ def error(bot, update, error):
 def get_html(url):
     r = requests.get(url)
     return r.text
+
 
 
 def get_forecast(html):
@@ -88,7 +89,7 @@ def get_yandex_news(url):
     text = []
     for n in news:
         title = n.find('a').text
-        link = config.ya_link[0:23] + n.find('a')['href']
+        link = config.ya_link[0:22] + n.find('a')['href']
         text.append(('[{}]({})'.format(title, link)))
     return text
 
@@ -134,6 +135,8 @@ def main():
     job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.morning_news))
     job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=config.noon_news))
     job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=config.evening_news))
+    # Trash jobs
+    job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.noon_news))
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since

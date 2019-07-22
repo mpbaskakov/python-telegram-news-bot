@@ -1,6 +1,7 @@
 import sqlite3
 import config
 
+
 def sql_command(sql, fetch):
     conn = sqlite3.connect('main.db')
     cursor = conn.cursor()
@@ -37,3 +38,10 @@ def get_news():
 
 def make_posted(item):
     sql_command("UPDATE {} SET posted = 'True' WHERE item = '{}'".format(config.db_name, item), fetch=False)
+
+
+def db_trash():
+    news = sql_command("SELECT item FROM {} WHERE posted LIKE 'True'".format(config.db_name), fetch='fetch_all')
+    if len(news) >= 10:
+        for n in news[10:]:
+            sql_command("DELETE FROM {} WHERE item = '{}'".format(config.db_name, n))
