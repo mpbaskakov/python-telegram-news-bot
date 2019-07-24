@@ -40,8 +40,8 @@ def make_posted(item):
     sql_command("UPDATE {} SET posted = 'True' WHERE item = '{}'".format(config.db_name, item), fetch=False)
 
 
-def db_trash():
+def db_trash(bot, update):
     news = sql_command("SELECT item FROM {} WHERE posted LIKE 'True'".format(config.db_name), fetch='fetch_all')
     if len(news) >= 10:
         for n in news[10:]:
-            sql_command("DELETE FROM {} WHERE item = '{}'".format(config.db_name, n))
+            sql_command("DELETE FROM {} WHERE item = '{}'".format(config.db_name, n), fetch=False)

@@ -25,7 +25,6 @@ def get_html(url):
     return r.text
 
 
-
 def get_forecast(html):
     soup = BeautifulSoup(html, 'lxml')
     fc = dict()
@@ -135,7 +134,7 @@ def main():
     job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.morning_news))
     job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=config.noon_news))
     job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=config.evening_news))
-    # Trash jobs
+    # Trash job
     job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.noon_news))
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
