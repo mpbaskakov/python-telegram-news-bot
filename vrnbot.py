@@ -135,7 +135,8 @@ def main():
     job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=config.noon_news))
     job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=config.evening_news))
     # Trash job
-    job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.noon_news))
+    job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.evening_news))
+    dp.add_handler(CommandHandler("trash", db_trash))
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
