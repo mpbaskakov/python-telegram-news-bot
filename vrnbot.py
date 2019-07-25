@@ -66,20 +66,24 @@ def post_forecast(bot, job):
 
 def post_news(bot, update):
     post_text = str()
-    news = get_news()
-    if news:
-        post_text = '*Дайджест {}:*\n'.format(config.digest_name)
+    n = 0
+    for channel in config.post_channel:
+        if n == 0:
+            news = get_news()
+            if news:
+                post_text = '*Дайджест {}:*\n'.format(config.digest_name)
+                counter = 1
+                for n in news:
+                    post_text += '{}) '.format(counter) + n[0] + '\n'
+                    counter += 1
+                    make_posted(n[0])
+        post_text += '\n{}\n'.format(config.ya_name[n])
         counter = 1
-        for n in news:
-            post_text += '{}) '.format(counter) + n[0] + '\n'
+        for news in get_yandex_news(config.ya_link[n]):
+            post_text += '{}) '.format(counter) + news + '\n'
             counter += 1
-            make_posted(n[0])
-    post_text += '\n{}\n'.format(config.ya_name)
-    counter = 1
-    for news in get_yandex_news(config.ya_link):
-        post_text += '{}) '.format(counter) + news + '\n'
-        counter += 1
-    bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
+        bot.send_message(channel, post_text, parse_mode='Markdown')
+        n += 1
 
 
 def get_yandex_news(url):
