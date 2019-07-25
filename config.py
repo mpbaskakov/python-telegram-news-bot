@@ -1,8 +1,8 @@
 import os
 
 token = os.environ['TOKEN_NEWS_BOT']
-post_channel = os.environ['POST_CHANNEL']
-forecast_url = os.environ['FORECAST_URL']
+post_channel = os.environ['POST_CHANNEL'].split(', ')
+forecast_url = os.environ['FORECAST_URL'].split(', ')
 digest_url = os.environ['DIGEST_URL']
 digest_name = os.environ['DIGEST_NAME']
 proxy_url = os.environ['PROXY_URL']

@@ -45,23 +45,27 @@ def get_forecast(html):
 
 
 def post_forecast(bot, job):
-    fc = get_forecast(get_html(config.forecast_url))
-    if [2, 3, 4].count(fc['traffic'][1]):
-        level = 'балла'
-    elif fc['traffic'][1] == 1:
-        level = 'балл'
-    else:
-        level = 'баллов'
-    common_text = 'Пробки: *{} {}* ({})\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'][1], level,
-                                                                                  fc['traffic'][0], fc['sunrise'],
-                                                                                  fc['sunset'])
-    t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
-    t_evening = '\nt° вечером: *{}*\nt° ночью: *{}*'.format(fc['evening_temp'], fc['night_temp'])
-    if job.context == 'morning':
-        post_text = 'Доброе утро, {}!\n\n'.format(fc['city']) + common_text + t_morning + t_evening
-    else:
-        post_text = 'Добрый вечер, {}!\n\n'.format(fc['city']) + common_text + t_evening + t_morning
-    bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
+    n = 0
+    post_text = str()
+    for fc_url in config.forecast_url:
+        fc = get_forecast(get_html(fc_url))
+        if [2, 3, 4].count(fc['traffic'][1]):
+            level = 'балла'
+        elif fc['traffic'][1] == 1:
+            level = 'балл'
+        else:
+            level = 'баллов'
+        common_text = 'Пробки: *{} {}* ({})\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'][1], level,
+                                                                                      fc['traffic'][0], fc['sunrise'],
+                                                                                      fc['sunset'])
+        t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
+        t_evening = '\nt° вечером: *{}*\nt° ночью: *{}*'.format(fc['evening_temp'], fc['night_temp'])
+        if job.context == 'morning':
+            post_text = 'Доброе утро, {}!\n\n'.format(fc['city']) + common_text + t_morning + t_evening
+        elif job.context == 'evening':
+            post_text = 'Добрый вечер, {}!\n\n'.format(fc['city']) + common_text + t_evening + t_morning
+        bot.send_message(config.post_channel[n], post_text, parse_mode='Markdown')
+        n += 1
 
 
 def post_news(bot, update):
@@ -128,7 +132,7 @@ def main():
     job_queue = updater.job_queue
     # Forecast jobs
     job_morning = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.morning_post), context='morning')
-    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.evening_post))
+    job_evening = job_queue.run_daily(post_forecast, time=datetime.time(hour=config.evening_post), context='evening')
     # News jobs: crawler and poster
     job_dgst_crawler = job_queue.run_repeating(spider, interval=1800, first=0)
     job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.morning_news))
