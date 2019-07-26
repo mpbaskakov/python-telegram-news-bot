@@ -66,24 +66,20 @@ def post_forecast(bot, job):
 
 def post_news(bot, update):
     post_text = str()
-    n = 0
-    for channel in config.post_channel:
-        if n == 0:
-            news = get_news()
-            if news:
-                post_text = '*Дайджест {}:*\n'.format(config.digest_name)
-                counter = 1
-                for n in news:
-                    post_text += '{}) '.format(counter) + n[0] + '\n'
-                    counter += 1
-                    make_posted(n[0])
-        post_text += '\n{}\n'.format(config.ya_name[n])
+    news = get_news()
+    if news:
+        post_text = '*Дайджест {}:*\n'.format(config.digest_name)
         counter = 1
-        for news in get_yandex_news(config.ya_link[n]):
-            post_text += '{}) '.format(counter) + news + '\n'
+        for n in news:
+            post_text += '{}) '.format(counter) + n[0] + '\n'
             counter += 1
-        bot.send_message(channel, post_text, parse_mode='Markdown')
-        n += 1
+            make_posted(n[0])
+    post_text += '\n{}\n'.format(config.ya_name)
+    counter = 1
+    for news in get_yandex_news(config.ya_link):
+        post_text += '{}) '.format(counter) + news + '\n'
+        counter += 1
+    bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
 
 
 def get_yandex_news(url):
@@ -139,7 +135,8 @@ def main():
     job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=config.noon_news))
     job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=config.evening_news))
     # Trash job
-    job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.noon_news))
+    job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.evening_news))
+    dp.add_handler(CommandHandler("trash", db_trash))
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since

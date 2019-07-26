@@ -42,6 +42,7 @@ def make_posted(item):
 
 def db_trash(bot, update):
     news = sql_command("SELECT item FROM {} WHERE posted LIKE 'True'".format(config.db_name), fetch='fetch_all')
-    if len(news) >= 10:
-        for n in news[10:]:
-            sql_command("DELETE FROM {} WHERE item = '{}'".format(config.db_name, n), fetch=False)
+    if len(news) > 10:
+        for n in news[:-10]:
+            sql_command("DELETE FROM {} WHERE item = '{}'".format(config.db_name, n[0]), fetch=False)
+        sql_command("VACUUM", fetch=False)
