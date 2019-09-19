@@ -88,7 +88,7 @@ def get_yandex_news(url):
     text = []
     for n in news:
         title = n.find('a').text
-        link = config.ya_link[0:22] + n.find('a')['href']
+        link = "https://yandex.ru/news/story/" + n.find('a')['href']
         text.append(('[{}]({})'.format(title, link)))
     return text
 
