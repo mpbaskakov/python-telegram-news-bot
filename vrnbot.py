@@ -123,19 +123,18 @@ def post_news(bot, update):
     bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
 
 
+# Post test message
+def test_message(bot, update):
+    bot.send_message(config.post_channel, 'test', parse_mode='Markdown')
+
+
 def main():
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater(config.token,
-                      request_kwargs={'proxy_url': config.proxy_url,
-                                      'urllib3_proxy_kwargs': {
-                                                                'username': config.proxy_login,
-                                                                'password': config.proxy_password,
-                                                                }
-                                      })
+    updater = Updater(config.token)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -157,6 +156,9 @@ def main():
     # Trash job
     job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.evening_news))
     dp.add_handler(CommandHandler("trash", db_trash))
+
+    #Test message
+    dp.add_handler(CommandHandler("test", test_message, 'test'))
 
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
