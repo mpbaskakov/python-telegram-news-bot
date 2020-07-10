@@ -158,7 +158,7 @@ def main():
     dp.add_handler(CommandHandler("trash", db_trash))
 
     #Test message
-    dp.add_handler(CommandHandler("test", test_message, 'test'))
+    dp.add_handler(CommandHandler("test", test_message))
 
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
