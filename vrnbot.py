@@ -20,11 +20,13 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
+# Getting html code of the url
 def get_html(url):
     r = requests.get(url)
     return r.text
 
 
+# Getting weather forecast
 def get_forecast(html):
     soup = BeautifulSoup(html, 'lxml')
     fc = dict()
@@ -44,26 +46,65 @@ def get_forecast(html):
     return fc
 
 
+# Getting COVID-19 statistics
+def get_covid(html):
+    return
+
+
+# Getting yandex.news
+def get_yandex_news(url):
+    soup = BeautifulSoup(get_html(url), 'lxml')
+    news = soup.find_all('h2', class_='story__title')[0:5]
+    text = []
+    for n in news:
+        title = n.find('a').text
+        link = "https://yandex.ru/news/story" + n.find('a')['href']
+        text.append(('[{}]({})'.format(title, link)))
+    return text
+
+
+# Getting news
+def spider(bot, update):
+    soup = BeautifulSoup(get_html(config.digest_url), 'lxml')
+    dd_list = soup.find_all('item')
+    for item in dd_list[::-1]:
+        title = item.find('title').text
+        link = item.find('guid').text
+        item_text = ('[{}]({})'.format(title, link))
+        if not check_item_exist(item_text):
+            write_to_base(item_text)
+
+
+# Posting forecast and covid stats
 def post_forecast(bot, job):
+
     fc = get_forecast(get_html(config.forecast_url))
+    # covid = get_covid(get_html(config.covid_url))
+
     if [2, 3, 4].count(fc['traffic'][1]):
         level = 'балла'
     elif fc['traffic'][1] == 1:
         level = 'балл'
     else:
         level = 'баллов'
+
     common_text = 'Пробки: *{} {}* ({})\nВосход солнца: *{}*, заход: *{}*'.format(fc['traffic'][1], level,
                                                                                   fc['traffic'][0], fc['sunrise'],
                                                                                   fc['sunset'])
     t_morning = '\nt° утром: *{}*\nt° днем: *{}*'.format(fc['morning_temp'], fc['day_temp'])
     t_evening = '\nt° вечером: *{}*\nt° ночью: *{}*'.format(fc['evening_temp'], fc['night_temp'])
+
+    # t_covid = '\n\nCovid-19: *{}*\nt° ночью: *{}*'.format(fc['evening_temp'], fc['night_temp'])
+
     if job.context == 'morning':
         post_text = 'Доброе утро, {}!\n\n'.format(fc['city']) + common_text + t_morning + t_evening
     else:
         post_text = 'Добрый вечер, {}!\n\n'.format(fc['city']) + common_text + t_evening + t_morning
+
     bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
 
 
+# Posting news
 def post_news(bot, update):
     post_text = str()
     news = get_news()
@@ -80,28 +121,6 @@ def post_news(bot, update):
         post_text += '{}) '.format(counter) + news + '\n'
         counter += 1
     bot.send_message(config.post_channel, post_text, parse_mode='Markdown')
-
-
-def get_yandex_news(url):
-    soup = BeautifulSoup(get_html(url), 'lxml')
-    news = soup.find_all('h2', class_='story__title')[0:5]
-    text = []
-    for n in news:
-        title = n.find('a').text
-        link = "https://yandex.ru/news/story" + n.find('a')['href']
-        text.append(('[{}]({})'.format(title, link)))
-    return text
-
-
-def spider(bot, update):
-    soup = BeautifulSoup(get_html(config.digest_url), 'lxml')
-    dd_list = soup.find_all('item')
-    for item in dd_list[::-1]:
-        title = item.find('title').text
-        link = item.find('guid').text
-        item_text = ('[{}]({})'.format(title, link))
-        if not check_item_exist(item_text):
-            write_to_base(item_text)
 
 
 def main():
@@ -134,9 +153,11 @@ def main():
     job_dgst_morning = job_queue.run_daily(post_news, time=datetime.time(hour=config.morning_news))
     job_dgst_noon = job_queue.run_daily(post_news, time=datetime.time(hour=config.noon_news))
     job_dgst_evening = job_queue.run_daily(post_news, time=datetime.time(hour=config.evening_news))
+
     # Trash job
     job_trash = job_queue.run_daily(db_trash, time=datetime.time(hour=config.evening_news))
     dp.add_handler(CommandHandler("trash", db_trash))
+
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
